@@ -1,0 +1,53 @@
+{% extends 'adminapp/base.html' %}
+{% load static %}
+{% load my_tags %}
+
+
+{% block content %}
+    <div class="users_list">
+        <button class="new_user">
+            <a href="{% url 'adminapp:user_create' %}">новый пользователь</a>
+        </button>
+        {% for object in object_list %}
+            <div class="user_record not_active {% if not object.is_active %}not{% endif %}">
+                {# <img src="/media/{{ object.avatar|default:'/users_avatars/panda.jpg' }}"/> #}
+                <img src="{{ object.avatar|media_for_users }}"/>
+                <div class="user_role">
+                    {% if object.is_superuser %}
+                        администратор
+                    {% else %}
+                        пользователь
+                    {% endif %}
+                    <button>
+                        <a href="{% url 'adminapp:user_update' object.pk %}">редактировать</a>
+                    </button>
+                    <button>
+                        {% if object.is_active %}
+                            <a href="{% url 'adminapp:user_delete' object.pk %}">удалить</a>
+                        {% else %}
+                            <a href="{% url 'adminapp:user_delete' object.pk %}">восстановить</a>
+                        {% endif %}
+                    </button>
+                </div>
+
+                <div class="user_name">
+                    <p>
+                        <strong>{{ object.username }}</strong>
+                    </p>
+                    <p>
+                        {% if object.first_name %}
+                            {{ object.first_name|title }}
+                            {% if object.last_name %}
+                                {{ object.last_name }}
+                            {% endif %}
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="user_age"> age: {{ object.age }}</div>
+                <div class="user_email"> email: {{ object.email }}</div>
+                <div class="user_lastlogin"> logged: {{ object.last_login|date:'d-m-Y' }}</div>
+            </div>
+        {% endfor %}
+    </div>
+
+{% endblock %}
