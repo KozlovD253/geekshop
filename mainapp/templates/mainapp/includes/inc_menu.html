@@ -30,7 +30,9 @@
     {% endif %}
     {% if user.is_superuser %}
         <li>
-            <a href="{% url 'admin:users' %}">админка</a>
+            <a href="{% url 'adminapp:user_read' %}">
+                Админка
+            </a>
         </li>
     {% endif %}
     <li>
