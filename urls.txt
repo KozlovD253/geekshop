@@ -1,5 +1,1 @@
-http://31.31.199.84/
-http://31.31.199.84/products/
-http://31.31.199.84/contact/
-http://31.31.199.84/products/category/18/
-http://31.31.199.84/products/category/19/
+http://31.31.199.84/basket/
