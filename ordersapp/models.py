@@ -1,3 +1,5 @@
+from itertools import product
+
 from django.conf import settings
 from django.db import models
 
@@ -42,6 +44,13 @@ class Order(models.Model):
     def get_total_cost(self):
         items = self.orderitems.select_related()
         return sum(list(map(lambda x: x.get_product_cost(), items)))
+
+    def get_summary(self):
+        items = self.orderitems.select_related()
+        return {
+            'total_cost': sum(list(map(lambda x: x.quantity * product.price, items))),
+            'total_quantity': sum(list(map(lambda x: x.quantity, items)))
+        }
 
     def delete(self):
         for item in self.orderitems.select_related():
