@@ -41,7 +41,8 @@ def main(request):
 
 def products(request, pk=None):
     title = 'продукты'
-    links_menu = ProductCategory.objects.filter(is_active=True)
+   # links_menu = ProductCategory.objects.filter(is_active=True)
+    links_menu = get_links_menu()
     page = request.GET.get('p', 1)
 
     if pk is not None:
