@@ -5,6 +5,7 @@ from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.shortcuts import render, get_object_or_404
 import os
 from django.conf import settings
+from django.views.decorators.cache import cache_page
 
 from basketapp.models import Basket
 from .models import Product, ProductCategory
@@ -75,7 +76,8 @@ def get_products_in_category_orederd_by_price(pk):
         key = f'products_in_category_orederd_by_price_{pk}'
         products = cache.get(key)
         if products is None:
-            products = Product.objects.filter(category__pk=pk, is_active=True, category__is_active=True).order_by('price')
+            products = Product.objects.filter(category__pk=pk, is_active=True, category__is_active=True).order_by(
+                'price')
             cache.set(key, products)
         return products
     else:
@@ -99,6 +101,7 @@ def main(request):
     return render(request, 'mainapp/index.html', content)
 
 
+@cache_page(3600)
 def products(request, pk=None):
     title = 'продукты'
     # links_menu = ProductCategory.objects.filter(is_active=True)
@@ -150,7 +153,7 @@ def products(request, pk=None):
 
 def product(request, pk=None, page=1):
     title = 'продукты'
-    #links_menu = ProductCategory.objects.filter()
+    # links_menu = ProductCategory.objects.filter()
     links_menu = get_product()
 
     if pk is not None:
