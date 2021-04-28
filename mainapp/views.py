@@ -150,7 +150,8 @@ def products(request, pk=None):
 
 def product(request, pk=None, page=1):
     title = 'продукты'
-    links_menu = ProductCategory.objects.filter()
+    #links_menu = ProductCategory.objects.filter()
+    links_menu = get_product()
 
     if pk is not None:
         if pk == 0:
