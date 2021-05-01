@@ -1,13 +1,22 @@
 <ul class="links-menu">
     <li>
-        <a href="{% url 'mainapp:category' 0 %}" {% if request.resolver_match.kwargs.pk == 0 %}class="active"{% endif %}>
+        <a href="{% url 'products:category' 0 %}"
+           class="{% if request.resolver_match.kwargs.pk == 0 %}
+                active
+              {% endif %}">
             все
         </a>
     </li>
     {% for link in links_menu %}
         <li>
-            <a href="{% url 'mainapp:category' link.pk %}" {% if request.resolver_match.kwargs.pk == link.pk %}class="active"{% endif %}>
-            {{ link.name }}
+            <a href="{% url 'products:category' link.pk %}"
+               class="{% if product and product.category.pk == link.pk %}
+                        active
+                    {% endif %}
+                    {% if not product and request.resolver_match.kwargs.pk|add:'0' == link.pk %}
+                        active
+                    {% endif %}">
+                {{ link.name }}
             </a>
         </li>
     {% endfor %}
