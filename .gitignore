@@ -1,6 +1,2 @@
-.idea
-db.sqlite3
-vk.json
-media/
-tmp/
-__pycache__/
+# Project exclude paths
+/venv/
