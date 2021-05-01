@@ -1,82 +1,73 @@
 import hashlib
 import random
-
-from django import forms
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm, UserChangeForm
+from authapp.models import User, UserProfile
+from django import forms
 
-from authapp.models import ShopUser, ShopUserProfile
 
-
-class ShopUserLoginForm(AuthenticationForm):
+class UserLoginForm(AuthenticationForm):
     class Meta:
-        model = ShopUser
-        fields = ('username', 'password',)
+        model = User
+        fields = ('username', 'password')
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super(UserLoginForm, self).__init__(*args, **kwargs)
+        self.fields['username'].widget.attrs['placeholder'] = 'Введите имя пользователя'
+        self.fields['password'].widget.attrs['placeholder'] = 'Введите пароль'
         for field_name, field in self.fields.items():
-            field.widget.attrs['class'] = 'form_control'
+            field.widget.attrs['class'] = 'form-control py-4'
 
 
-class ShopUserRegisterForm(UserCreationForm):
+class UserRegisterForm(UserCreationForm):
     class Meta:
-        model = ShopUser
-        fields = ('username', 'email', 'first_name', 'age', 'avatar', 'password1', 'password2',)
+        model = User
+        fields = ('username', 'email', 'first_name', 'last_name', 'password1', 'password2')
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super(UserRegisterForm, self).__init__(*args, **kwargs)
+        self.fields['username'].widget.attrs['placeholder'] = 'Введите имя пользователя'
+        self.fields['email'].widget.attrs['placeholder'] = 'Введите адрес электронной почты'
+        self.fields['first_name'].widget.attrs['placeholder'] = 'Введите имя'
+        self.fields['last_name'].widget.attrs['placeholder'] = 'Введите фамилию'
+        self.fields['password1'].widget.attrs['placeholder'] = 'Введите пароль'
+        self.fields['password2'].widget.attrs['placeholder'] = 'Подтвердите пароль'
         for field_name, field in self.fields.items():
-            field.widget.attrs['class'] = 'form_control'
-
-    def clean_age(self):
-        data = self.cleaned_data['age']
-        if data < 18:
-            raise forms.ValidationError('слишком молодой!')
-        return data
-
-    def clean_email(self):
-        data = self.cleaned_data['email']
-        if ShopUser.objects.filter(email=data).exists():
-            raise forms.ValidationError('email exists')
-        return data
+            field.widget.attrs['class'] = 'form-control py-4'
 
     def save(self):
         user = super().save()
-        user.is_active = True
+
+        user.is_active = False
         salt = hashlib.sha1(str(random.random()).encode('utf8')).hexdigest()[:6]
         user.activation_key = hashlib.sha1((user.email + salt).encode('utf8')).hexdigest()
-
         user.save()
+
         return user
 
 
-class ShopUserEditForm(UserChangeForm):
+class UserProfileForm(UserChangeForm):
+    avatar = forms.ImageField(widget=forms.FileInput())
+
     class Meta:
-        model = ShopUser
-        fields = ('username', 'email', 'first_name', 'age', 'avatar', 'password',)
+        model = User
+        fields = ('first_name', 'last_name', 'avatar', 'username', 'email', 'age')
 
     def __init__(self, *args, **kwargs):
-        super(ShopUserEditForm, self).__init__(*args, **kwargs)
+        super(UserProfileForm, self).__init__(*args, **kwargs)
         for field_name, field in self.fields.items():
-            field.widget.attrs['class'] = 'form_control'
-            field.help_text = ''
-            if field_name == 'password':
-                field.widget = forms.HiddenInput()
-
-    def clean_age(self):
-        data = self.cleaned_data['age']
-        if data < 18:
-            raise forms.ValidationError('молодой')
-        return data
+            field.widget.attrs['class'] = 'form-control py-4'
+        self.fields['username'].widget.attrs['readonly'] = True
+        self.fields['email'].widget.attrs['readonly'] = True
+        self.fields['avatar'].widget.attrs['class'] = 'custom-file-input'
 
 
-class ShopUserProfileEditForm(forms.ModelForm):
+class UserProfileEditForm(forms.ModelForm):
+
     class Meta:
-        model = ShopUserProfile
-        fields = ('tag_line', 'about_me', 'gender',)
+        model = UserProfile
+        fields = ('tagline', 'about_me', 'gender', 'gender_no_choice')
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for field_name, field in self.fields.items():
-            field.widget.attrs['class'] = 'form_control'
-            field.help_text = ''
+            field.widget.attrs['class'] = 'form-control py-4'

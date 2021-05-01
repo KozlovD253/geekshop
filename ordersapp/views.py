@@ -1,16 +1,17 @@
+from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.db.models.signals import pre_save, pre_delete
 from django.dispatch import receiver
 from django.forms import inlineformset_factory
-from django.http import HttpResponseRedirect, JsonResponse
-from django.shortcuts import render, get_object_or_404
+from django.http import HttpResponseRedirect
+from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy, reverse
-from django.views.generic import ListView, DeleteView, CreateView, DetailView, UpdateView
+from django.utils.decorators import method_decorator
+from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView
 
 from basketapp.models import Basket
-from mainapp.models import Product
-from ordersapp.forms import OrderForm, OrderItemForm
-from ordersapp.models import Order, OrderItem
+from ordersapp.forms import OrderItemsForm
+from ordersapp.models import Order, OrderItems
 
 
 class OrderList(ListView):
@@ -19,33 +20,40 @@ class OrderList(ListView):
     def get_queryset(self):
         return Order.objects.filter(user=self.request.user)
 
+    @method_decorator(login_required())
+    def dispatch(self, *args, **kwargs):
+        return super(ListView, self).dispatch(*args, **kwargs)
 
-class OrderCreateView(CreateView):
+
+class OrderCreate(CreateView):
     model = Order
-    success_url = reverse_lazy('order:orders_list')
     fields = []
+    success_url = reverse_lazy('order:orders')
 
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, **kwargs): #переопределили контекст
         data = super().get_context_data(**kwargs)
-        OrderFormSet = inlineformset_factory(Order, OrderItem, form=OrderItemForm, extra=1)
+        OrderFormSet = inlineformset_factory(Order, OrderItems, form=OrderItemsForm, extra=1)
 
         if self.request.POST:
             formset = OrderFormSet(self.request.POST)
         else:
             basket_items = Basket.objects.filter(user=self.request.user)
-            if len(basket_items):
-                OrderFormSet = inlineformset_factory(Order, OrderItem, form=OrderItemForm, extra=len(basket_items))
+            if basket_items.exists():
+                OrderFormSet = inlineformset_factory(Order, OrderItems, form=OrderItemsForm, extra=basket_items.count())
                 formset = OrderFormSet()
                 for num, form in enumerate(formset.forms):
                     form.initial['product'] = basket_items[num].product
                     form.initial['quantity'] = basket_items[num].quantity
                     form.initial['price'] = basket_items[num].product.price
+                    form.initial['product_count'] = basket_items[num].product.quantity
             else:
                 formset = OrderFormSet()
+
         data['orderitems'] = formset
+
         return data
 
-    def form_valid(self, form):
+    def form_valid(self, form): #дополнили валидацию формы
         context = self.get_context_data()
         orderitems = context['orderitems']
 
@@ -59,24 +67,24 @@ class OrderCreateView(CreateView):
                 if basket_items.exists():
                     basket_items.delete()
 
+
         if self.object.get_total_cost() == 0:
             self.object.delete()
 
         return super().form_valid(form)
 
+    # @method_decorator(login_required())
+    # def dispatch(self, *args, **kwargs):
+    #     return super(ListView, self).dispatch(*args, **kwargs)
 
-class OrderDetailView(DetailView):
+class OrderUpdate(UpdateView):
     model = Order
-
-
-class OrderUpdateView(UpdateView):
-    model = Order
-    success_url = reverse_lazy('order:orders_list')
     fields = []
+    success_url = reverse_lazy('order:orders')
 
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, **kwargs):  # переопределили контекст
         data = super().get_context_data(**kwargs)
-        OrderFormSet = inlineformset_factory(Order, OrderItem, form=OrderItemForm, extra=1)
+        OrderFormSet = inlineformset_factory(Order, OrderItems, form=OrderItemsForm, extra=1)
 
         if self.request.POST:
             formset = OrderFormSet(self.request.POST, instance=self.object)
@@ -105,10 +113,18 @@ class OrderUpdateView(UpdateView):
 
         return super().form_valid(form)
 
+    # @method_decorator(login_required())
+    # def dispatch(self, *args, **kwargs):
+    #     return super(ListView, self).dispatch(*args, **kwargs)
 
-class OrderDeleteView(DeleteView):
+
+class OrderDelete(DeleteView):
     model = Order
-    success_url = reverse_lazy('order:orders_list')
+    success_url = reverse_lazy('order:orders')
+
+
+class OrderDetail(DetailView):
+    model = Order
 
 
 def order_forming_complete(request, pk):
@@ -116,31 +132,22 @@ def order_forming_complete(request, pk):
     order.status = Order.SENT_TO_PROCEED
     order.save()
 
-    return HttpResponseRedirect(reverse('order:orders_list'))
-
+    return HttpResponseRedirect(reverse('order:orders'))
 
 @receiver(pre_save, sender=Basket)
-@receiver(pre_save, sender=OrderItem)
-def product_quantity_update_save(sender, update_fields, instance, **kwargs):
+@receiver(pre_save, sender=OrderItems)
+def product_quantity_update_save(sender, update_fields, instance, **kwargs):   #возврат товаров на склад при удалении корзины или заказа
     if update_fields is 'quantity' or 'product':
         if instance.pk:
             instance.product.quantity -= instance.quantity - sender.get_item(instance.pk).quantity
         else:
             instance.product.quantity -= instance.quantity
+
         instance.product.save()
 
 
 @receiver(pre_delete, sender=Basket)
-@receiver(pre_delete, sender=OrderItem)
+@receiver(pre_delete, sender=OrderItems)
 def product_quantity_update_delete(sender, instance, **kwargs):
     instance.product.quantity += instance.quantity
     instance.product.save()
-
-
-def get_product_price(request, pk):
-    if request.is_ajax():
-        product = Product.objects.filter(pk=int(pk)).first()
-        if product:
-            return JsonResponse({'price': product.price})
-        else:
-            return JsonResponse({'price': 0})

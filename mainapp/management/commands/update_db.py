@@ -1,12 +1,11 @@
 from django.core.management import BaseCommand
 
-from authapp.models import ShopUser, ShopUserProfile
+from authapp.models import User, UserProfile
 
 
 class Command(BaseCommand):
 
-    def handle(self, *args, **kwargs):
-        users = ShopUser.objects.all()
+    def handle(self, *args, **options):
+        users = User.objects.all()
         for user in users:
-            user_profile = ShopUserProfile.objects.create(user=user)
-            user_profile.save()
+            UserProfile.objects.create(user=user)

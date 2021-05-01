@@ -1,5 +1,4 @@
 from django.contrib import admin
+from authapp.models import User
 
-from authapp.models import ShopUser
-
-admin.site.register(ShopUser)
+admin.site.register(User)

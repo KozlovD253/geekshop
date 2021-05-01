@@ -1,2 +1,6 @@
-# Project exclude paths
-/venv/
+.idea
+db.sqlite3
+vk.json
+media/
+tmp/
+__pycache__/
