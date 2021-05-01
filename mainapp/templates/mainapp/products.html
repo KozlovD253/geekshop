@@ -1,15 +1,18 @@
 {% extends 'mainapp/base.html' %}
 {% load static %}
 
-{% block menu %}
-    <div class="hero-white">
-        <div class="header clearfix">
-            {% include 'mainapp/includes/inc_menu.html' %}
-        </div>
-    </div>
-{% endblock %}
+
 
 {% block content %}
+    <div class="hero-white">
+        <div class="header clearfix">
+            <a href="index.html" class="logo"></a>
+            {% include 'mainapp/includes/inc_menu.html' %}
+            <a href="#" class="search"></a>
+            <a href="#" class="basket"></a>
+        </div>
+    </div>
+
     <div class="details">
         <div class="links clearfix">
             {% include 'mainapp/includes/inc_categories_menu.html' %}
@@ -18,7 +21,7 @@
         <div class="details-products">
             <div class="details-slider">
                 <div class="slider-product">
-                    <img src="/media/{{ hot_product.image }}">
+                    <img src="/media{{ hot_product.image }}">
                 </div>
                 <div class="slider-control">
                     <div class="block">
@@ -32,7 +35,7 @@
                         </a>
                     </div>
                     <div class="block">
-                        <a href="#"><img src="/media/{{ hot_product.image }}" alt="">
+                        <a href="#"><img src="{% static 'img/controll2.jpg' %}" alt="">
                             <div class="text"></div>
                         </a>
                     </div>
@@ -48,7 +51,7 @@
                 </a>
                 <div class="description-text">
                     <p>
-                        {{ hot_product.description }}
+                    {{ hot_product.description }}
                     </p>
                 </div>
             </div>
@@ -62,14 +65,15 @@
             <div class="related-products clearfix">
                 {% for product in same_products %}
                     <div class="block">
-                        <a href="{% url 'products:product' product.pk %}"><img src="/media/{{ product.image }}" alt={{ product.short_desc }}>
+                        <a href="{% url 'products:product' product.pk %}">
+                            <img src="/media/{{ product.image }}" alt="{{ product.short_desc }}">
                             <div class="text">
                                 <img src="{% static 'img/icon-hover.png' %}" alt="img">
                                 <h3>Категория:{{ product.category.name }}</h3>
                                 <h4>Название: {{ product.name }}</h4>
                                 <p>Описание: {{ product.description }}</p>
                                 <p>Цена: {{ product.price }}</p>
-                                <p>На складе: {{ product.quantity }} </p>
+                                <p>На складе: {{ product.quantity }}</p>
                             </div>
                         </a>
                     </div>
@@ -77,4 +81,5 @@
             </div>
         </div>
     </div>
+
 {% endblock %}
