@@ -30,7 +30,7 @@ class OrderCreate(CreateView):
     fields = []
     success_url = reverse_lazy('order:orders')
 
-    def get_context_data(self, **kwargs): #переопределили контекст
+    def get_context_data(self, **kwargs):  # переопределили контекст
         data = super().get_context_data(**kwargs)
         OrderFormSet = inlineformset_factory(Order, OrderItems, form=OrderItemsForm, extra=1)
 
@@ -53,7 +53,7 @@ class OrderCreate(CreateView):
 
         return data
 
-    def form_valid(self, form): #дополнили валидацию формы
+    def form_valid(self, form):  # дополнили валидацию формы
         context = self.get_context_data()
         orderitems = context['orderitems']
 
@@ -67,7 +67,6 @@ class OrderCreate(CreateView):
                 if basket_items.exists():
                     basket_items.delete()
 
-
         if self.object.get_total_cost() == 0:
             self.object.delete()
 
@@ -76,6 +75,7 @@ class OrderCreate(CreateView):
     # @method_decorator(login_required())
     # def dispatch(self, *args, **kwargs):
     #     return super(ListView, self).dispatch(*args, **kwargs)
+
 
 class OrderUpdate(UpdateView):
     model = Order
@@ -134,9 +134,11 @@ def order_forming_complete(request, pk):
 
     return HttpResponseRedirect(reverse('order:orders'))
 
+
 @receiver(pre_save, sender=Basket)
 @receiver(pre_save, sender=OrderItems)
-def product_quantity_update_save(sender, update_fields, instance, **kwargs):   #возврат товаров на склад при удалении корзины или заказа
+def product_quantity_update_save(sender, update_fields, instance,
+                                 **kwargs):  # возврат товаров на склад при удалении корзины или заказа
     if update_fields is 'quantity' or 'product':
         if instance.pk:
             instance.product.quantity -= instance.quantity - sender.get_item(instance.pk).quantity
